@@ -1,32 +1,45 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
-import { postCreateUser } from '../services/UserService';
+import { putUpdateUser } from '../services/UserService';
 import { toast } from 'react-toastify';
-const ModalAddNew = (props) => {
-  const {show, handleClose, handleUpdateTable} = props;
+const ModalEditUser = (props) => {
+  const {show, handleClose, dataUserEdit, handleEditUserFromModal} = props;
   const [name, setName] = useState("");
   const [job, setJob] = useState("");
   
-  const handlesaveuser = async () => {
-    // console.log("check: ", "name = ", name, "job = ", job)
-    let res = await postCreateUser(name, job);
-        console.log("check res: ", res)
-        if(res && res.id){
-          handleClose();
-          setName("");
-          setJob("");
-          toast.success("Thêm thành công");
-          handleUpdateTable({first_name: name, id: res.id})
-        }
-        else{
-          toast.error("Thêm thất bại")
-        }
-  }
+  // const handleEditUser = async () => {
+  //   const res = await putUpdateUser(name, job);
+  //   console.log("check: ", res);
+  // };
+
+  const handleEditUser = async () => {
+    try {
+      const res = await putUpdateUser(dataUserEdit.id, name, job); // Thêm ID nếu cần
+      console.log(res)
+      if (res && res.updatedAt){
+        handleEditUserFromModal({
+          first_name:name,
+          id: dataUserEdit.id
+        })
+        handleClose();
+        toast.success("Update success")
+      }
+      // console.log('Cập nhật thành công:', res);
+    } catch (error) {
+      console.error('Lỗi khi cập nhật:', error.response ? error.response.data : error.message);
+    }
+  };
+  useEffect (() =>{
+    if(show){
+      setName(dataUserEdit.first_name)
+    }
+  }, [dataUserEdit, show])
+  // console.log("check: ", dataUserEdit)
   return (<>
       <Modal show={show} onHide={handleClose}>
         <Modal.Header closeButton>
-          <Modal.Title>Add New User</Modal.Title>
+          <Modal.Title>Edit User</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <div className='add-new-user'>
@@ -52,7 +65,7 @@ const ModalAddNew = (props) => {
           <Button variant="secondary" onClick={handleClose}>
             Close
           </Button>
-          <Button variant="primary" onClick={() => handlesaveuser()}>
+          <Button variant="primary" onClick={() => handleEditUser()}>
             Save Changes
           </Button>
         </Modal.Footer>
@@ -60,4 +73,4 @@ const ModalAddNew = (props) => {
   </>)
 }
 
-export default ModalAddNew;
+export default ModalEditUser;
